@@ -23,6 +23,14 @@ def read_dx2cc(fn):
 
     return dx2cc
 
+def read_icd9to10(fn):
+    fn = rscfn(__name__, fn)
+    with open(fn, mode='r') as f:
+        d = {}
+        for row in csv.reader(f, delimiter=','):
+            d[row[0]] = row[1]
+        return d
+
 def read_coefn(fn):
     coef = {}
     fn = rscfn(__name__, fn)
