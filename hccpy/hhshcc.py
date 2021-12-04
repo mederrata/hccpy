@@ -21,6 +21,7 @@ class HHSHCCEngine:
                 }
             }
         self.myear = myear
+        self.icd9to10map = utils.read_icd9to10("data/icd9toicd10cmgem.csv")
         self.dx2cc = utils.read_dx2cc(fnmaps[myear]["dx2cc"])
         self.ndc2rxc = utils.read_code2rxc(fnmaps[myear]["ndc2rxc"])
         self.hcpcs2rxc = utils.read_code2rxc(fnmaps[myear]["hcpcs2rxc"])
@@ -56,7 +57,7 @@ class HHSHCCEngine:
             sex = smap[sex.lower()]
         return sex
 
-    def profile(self, dx_lst, pr_lst=[], rx_lst=[], 
+    def _profile(self, dx_lst, pr_lst=[], rx_lst=[], 
                 age=20, sex="M", enroll_months=10, plate="S"):
         """Returns the HCC risk profile of a given patient information.
 
@@ -110,6 +111,36 @@ class HHSHCCEngine:
                     }
                 }
         return out
+
+    def profile(self, dx_lst=[], pr_lst=[], rx_lst=[],
+                age=20, sex="M", enroll_months=10, plate="S", dx9_lst=None):
+        """Returns the HCC risk profile of a given patient information.
+
+        Parameters
+        ----------
+        dx_lst : list of str
+                 A list of ICD10 codes for the measurement year.
+        pr_lst : list of str
+                 A list of HCPCS codes for the measurement year.
+        rx_lst : list of str
+                 A list of NDC codes for the measurement year.
+        age : int or float
+              The age of the patient.
+        sex : str 
+              The sex of the patient; {"M", "F"}
+        enroll_months : int
+              The number of months the patient was enrolled
+        dx9_lst : list of str
+                 A list of ICD9 codes for the measurement year.
+        """
+        dx_in_lst = []
+        if dx9_lst is not None:
+            for icd9 in dx9_lst:
+                dx_in_lst.append(self.icd9to10map.get(icd9, "000"))
+        else:
+            dx_in_lst = dx_lst
+        return self._profile(dx_lst=dx_in_lst, pr_lst=pr_lst, rx_lst=rx_lst, age=age, sex=sex, enroll_months=enroll_months, plate=plate)
+
 
     def diff(self, before=[], after=[]):
         """

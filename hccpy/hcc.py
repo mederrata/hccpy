@@ -47,6 +47,7 @@ class HCCEngine:
         }
         assert fnmaps[version]["dx2cc"].get(dx2cc_year), "Invalid combination of version and year parameters"
         self.version = version
+        self.icd9to10map = utils.read_icd9to10("data/icd9toicd10cmgem.csv")
         self.dx2cc = utils.read_dx2cc(fnmaps[version]["dx2cc"][dx2cc_year])
         self.coefn = utils.read_coefn(fnmaps[version]["coefn"])
         self.label = utils.read_label(fnmaps[version]["label"])
@@ -94,7 +95,7 @@ class HCCEngine:
             sex = smap[sex.lower()]
         return sex
 
-    def profile(self, dx_lst, age=70, sex="M", 
+    def _profile(self, dx_lst, age=70, sex="M", 
                     elig="CNA", orec="0", medicaid=False):
         """Returns the HCC risk profile of a given patient information.
 
@@ -155,6 +156,50 @@ class HCCEngine:
                     }
                 }
         return out
+    
+    def profile(self, dx_lst=[], age=70, sex="M", 
+                    elig="CNA", orec="0", medicaid=False, dx9_lst=None):
+        """Returns the HCC risk profile of a given patient information.
+
+        Parameters
+        ----------
+        dx_lst : list of str
+                 A list of ICD10 codes for the measurement year.
+        age : int or float
+              The age of the patient.
+        sex : str 
+              The sex of the patient; {"M", "F"}
+        elig : str
+               The eligibility segment of the patient.
+               Allowed values are as follows:
+               - "CFA": Community Full Benefit Dual Aged
+               - "CFD": Community Full Benefit Dual Disabled
+               - "CNA": Community NonDual Aged
+               - "CND": Community NonDual Disabled
+               - "CPA": Community Partial Benefit Dual Aged
+               - "CPD": Community Partial Benefit Dual Disabled
+               - "INS": Long Term Institutional
+               - "NE": New Enrollee
+               - "SNPNE": SNP NE
+        orec: str
+              Original reason for entitlement code.
+              - "0": Old age and survivor's insurance
+              - "1": Disability insurance benefits
+              - "2": End-stage renal disease 
+              - "3": Both DIB and ESRD
+        medicaid: bool
+                  If the patient is in Medicaid or not.
+        dx9_lst : list of str
+                 A list of ICD9 codes for the measurement year.
+        """
+        dx_in_lst = []
+        if dx9_lst is not None:
+            for icd9 in dx9_lst:
+                dx_in_lst.append(self.icd9to10map.get(icd9, "000"))
+        else:
+            dx_in_lst = dx_lst
+        return self._profile(dx_lst=dx_in_lst, age=age, sex=sex, 
+                    elig=elig, orec=orec, medicaid=medicaid)
 
     def describe_hcc(self, cc):
         """
