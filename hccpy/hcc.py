@@ -156,7 +156,70 @@ class HCCEngine:
                     }
                 }
         return out
-    
+    def _icd2hcc(self, dx_lst, age=70, sex="M", orec="0"):
+        """Returns the HCC risk profile of a given patient information.
+
+        Parameters
+        ----------
+        dx_lst : list of str
+                 A list of ICD10 codes for the measurement year.
+        age : int or float
+              The age of the patient.
+        sex : str 
+              The sex of the patient; {"M", "F"}
+        orec: str
+              Original reason for entitlement code.
+              - "0": Old age and survivor's insurance
+              - "1": Disability insurance benefits
+              - "2": End-stage renal disease 
+              - "3": Both DIB and ESRD
+        """
+        sex = self._sexmap(sex)
+        disabled, _, _ = AGESEXV2.get_ds(age, orec, medicaid=0, elig="")
+
+        dx_set = {dx.strip().upper().replace(".","") for dx in dx_lst}
+        cc_dct = {dx:self.dx2cc[dx] for dx in dx_set if dx in self.dx2cc}
+        cc_dct = V22I0ED2.apply_agesex_edits(cc_dct, age, sex)
+        hcc_lst = self._apply_hierarchy(cc_dct, age, sex)
+        hcc_lst = self._apply_interactions(hcc_lst, age, disabled)
+        # risk_dct = V2218O1P.get_risk_dct(self.coefn, hcc_lst, age, 
+        #                                 sex, elig, origds, medicaid)
+
+        # score = np.sum([x for x in risk_dct.values()])
+        out = {
+                "hcc_lst": hcc_lst,    # HCC list before interactions
+                "hcc_map": cc_dct,     # before applying hierarchy
+                }
+        return out
+    def icd2hcc(self, dx_lst=[], age=70, sex="M", orec="0", dx9_lst=None):
+        """Returns the HCC risk profile of a given patient information.
+
+        Parameters
+        ----------
+        dx_lst : list of str
+                 A list of ICD10 codes for the measurement year.
+        age : int or float
+              The age of the patient.
+        sex : str 
+              The sex of the patient; {"M", "F"}
+        orec: str
+              Original reason for entitlement code.
+              - "0": Old age and survivor's insurance
+              - "1": Disability insurance benefits
+              - "2": End-stage renal disease 
+              - "3": Both DIB and ESRD
+        dx9_lst : list of str
+                 A list of ICD9 codes for the measurement year.
+        """
+        dx_in_lst = []
+        if dx9_lst is not None:
+            for icd9 in dx9_lst:
+                dx_in_lst.append(self.icd9to10map.get(icd9, "000"))
+        else:
+            dx_in_lst = dx_lst
+        return self._icd2hcc(dx_lst=dx_in_lst, age=age, sex=sex, orec=orec)
+
+
     def profile(self, dx_lst=[], age=70, sex="M", 
                     elig="CNA", orec="0", medicaid=False, dx9_lst=None):
         """Returns the HCC risk profile of a given patient information.

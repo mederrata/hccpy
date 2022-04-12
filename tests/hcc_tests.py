@@ -9,9 +9,12 @@ class TestHCCEngine(unittest.TestCase):
 
         he = HCCEngine()
         rp = he.profile(["E1169"], elig="CNA")
+        print("---------")
+        print(rp)#['HCC18', 'D1']
         self.assertTrue("CNA_HCC18" in rp["details"])
 
         rp = he.profile(["I209"], elig="CNA")
+        print(rp)# ['HCC88', 'D1']
         self.assertTrue("CNA_HCC88" in rp["details"])
 
 
@@ -138,6 +141,32 @@ class TestHCCEngine(unittest.TestCase):
         rp = he.profile(["E083599"])
         self.assertTrue("HCC18" in rp["hcc_map"]["E083599"])
         self.assertTrue("HCC122" in rp["hcc_map"]["E083599"])
+
+    def test_icd2hcc(self):
+
+        he = HCCEngine()        
+        rp = he.icd2hcc(dx_lst = ["E0952"])
+        print(rp)
+        self.assertTrue("HCC18" in rp["hcc_map"]["E0952"])
+        self.assertTrue("HCC106" in rp["hcc_map"]["E0952"])
+        self.assertTrue("HCC108" in rp["hcc_map"]["E0952"])
+        
+        rp = he.icd2hcc(dx_lst = ["E083599"])
+        print(rp)
+        self.assertTrue("HCC18" in rp["hcc_map"]["E083599"])
+        self.assertTrue("HCC122" in rp["hcc_map"]["E083599"])
+
+
+        rp = he.icd2hcc(dx_lst = ["E1169"])
+        print(rp)
+        self.assertTrue("HCC18" in rp["hcc_map"]["E1169"])
+        self.assertTrue("D1" in rp["hcc_lst"])
+        
+        rp = he.icd2hcc(dx_lst = ["I209"])
+        print(rp)
+        self.assertTrue("HCC88" in rp["hcc_map"]["I209"])
+        self.assertTrue("D1" in rp["hcc_lst"])
+
 
 if __name__ == "__main__":
 
