@@ -28,6 +28,7 @@ class HHSHCCEngine:
         self.coefn = utils.read_coefn(fnmaps[myear]["coefn"])
         self.label = utils.read_label(fnmaps[myear]["label"])
         self.hier = utils.read_hier(fnmaps[myear]["hier"])
+        # print(self.label.keys())
 
     def _apply_hierarchy(self, cc_dct, age, sex):
         """Returns a list of HCCs after applying hierarchy and age/sex edit
@@ -81,6 +82,7 @@ class HHSHCCEngine:
         agesexvar, agegroup = AGESEXV6.get_agesex(age, sex)
         enroll_months = str(enroll_months)
         enroll_dur = "ED_"+enroll_months
+        # print(f"enroll_dur:{enroll_dur}")
 
         # dx2cc
         dx_set = {dx.strip().upper().replace(".","") for dx in dx_lst}
@@ -89,7 +91,7 @@ class HHSHCCEngine:
         # rxc
         cc_dct.update({ndc:self.ndc2rxc[ndc] for ndc in rx_lst
                         if ndc in self.ndc2rxc})
-        cc_dct.update({hcpcs:self.hcpcs2rxc[pr] for pr in pr_lst
+        cc_dct.update({pr:self.hcpcs2rxc[pr] for pr in pr_lst
                         if pr in self.hcpcs2rxc})
 
         cc_dct = I0V05ED2.apply_agesex_edits(cc_dct, age, sex)
